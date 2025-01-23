@@ -1,0 +1,12 @@
+# Cache directories
+__pycache__/
+
+# Logs
+logs/
+
+# Misc.
+misc/
+
+# Response files
+debug_ap-filtered-list.json
+recentActive_nearby_list.json
