@@ -8,8 +8,8 @@ modules_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "modules
 if modules_path not in sys.path:
     sys.path.append(modules_path)
 # Custom modules
-import __logger as logger
-import __readProperties as readProperties
+import __logger as logger # type: ignore
+import __readProperties as readProperties # type: ignore
 
 
 # Function to get the WiFi occupancy counts

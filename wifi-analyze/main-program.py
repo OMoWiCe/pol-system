@@ -6,9 +6,9 @@ modules_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "modules
 if modules_path not in sys.path:
     sys.path.append(modules_path)
 # Custom modules
-import __logger as logger
-import __readProperties as readProperties
-import __obfuscateData as obfuscateData
+import __logger as logger # type: ignore
+import __readProperties as readProperties # type: ignore
+import __obfuscateData as obfuscateData # type: ignore
 import _wifi_occupancy_algo as wifiOccupancy
 
 
