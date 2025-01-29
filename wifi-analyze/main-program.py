@@ -29,6 +29,7 @@ try:
     wifi_occupancy_list, module_status_code = wifiOccupancy.get_wifi_occupancy_list()
     if module_status_code != 0:
         logger.log_message(loggerSetup, "ERROR", "Error occurred while getting the WiFi occupancy list.")
+        sys.exit(1)
     else:
         logger.log_message(loggerSetup, "INFO", "WiFi occupancy list obtained successfully!")
     # Obfuscate the wifi data

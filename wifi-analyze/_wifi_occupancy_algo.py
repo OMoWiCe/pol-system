@@ -34,6 +34,8 @@ def get_wifi_occupancy_list():
         signal_threshold_24GHz = int(properties["signal_threshold_24ghz"])
         signal_threshold_5GHz = int(properties["signal_threshold_5ghz"])
         kismet_server_ip = properties["kismet_server_ip"]
+        kismet_server_username = properties["kismet_username"]
+        kismet_server_password = properties["kismet_password"]
     except Exception as e:
         last_seen_time_threshold=300
         out_of_range_signal_level=-72
@@ -44,7 +46,7 @@ def get_wifi_occupancy_list():
     module_status_code = 1
 
     # Get device list active in past X seconds from Kismet API
-    API_URL = f"http://rbpi:rbpi123@{kismet_server_ip}:2501/devices/last-time/-{last_seen_time_threshold}/devices.prettyjson"
+    API_URL = f"http://{kismet_server_username}:{kismet_server_password}@{kismet_server_ip}:2501/devices/last-time/-{last_seen_time_threshold}/devices.prettyjson"
     REQUEST_HEADERS = {"Content-Type": "application/json"}
     REQUEST_BODY = {
          "fields":[

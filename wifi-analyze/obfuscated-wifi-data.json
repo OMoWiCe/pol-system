@@ -1,20 +1,7 @@
 {
     "location-id": "home",
     "device_id": "dev1",
-    "utc_timestamp": "2025-01-09T07:37:26.589433+00:00",
-    "local_timestamp": "2025-01-09T13:07:26.589433",
-    "occupancy-list": [
-        "bcfb04d8dc151042853ef90035cd39183f968c13e9ae1f04834f2896f95bac27",
-        "fef53fe42aecc5adf441d9f1b52cae081f0cddac84c335e51b56ac1643cf8e5c",
-        "a2cdd54933d3be9bf1a97f2942aca017efbd06d950ea0683d78e682fd1fc878b",
-        "d0fc1daaa895d8a5e1d0ae746a70f0539b8275156a0fc82a59602ae2f0717ae4",
-        "e638dc56eea321b5f1c308d13f977460af32324dabe822e735fe3bcb0692451e",
-        "65977fcde051b34590dfc003144385cc54f256e8a1ca517342f20181d7db6800",
-        "968176b249f0fd188e4ed25b586ccb1cac769bb34ef93428f7e03c13001b5cfc",
-        "943f3c280e57ce371d93ee050d7a5d1da980bdd6a6e7b0ffcdfb02cd24758e0c",
-        "272b565a3f890d329e1a4959046edfdb1ac1083c09a9da6bb2fbe1ab5a059873",
-        "e35271b891f5fb87c70b7c9f710ebe36e2467bad716ebaaf1bc78b81d4941ef1",
-        "5b5835c67db6fa233f3ac30f37a51cb1c5d1ee190bb4cc4f80aa9e5b0b8573dd",
-        "aa79ce20222884ffa46b5a24c88e1e9e25db0e032965f37f68d6d571521d374f"
-    ]
+    "utc_timestamp": "2025-01-29T10:44:10.644965+00:00",
+    "local_timestamp": "2025-01-29T16:14:10.644965",
+    "occupancy-list": []
 }
