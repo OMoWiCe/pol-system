@@ -11,5 +11,6 @@ misc/
 *.kismet*
 
 # Response files
+obfuscated-wifi-data.json
 debug_ap-filtered-list.json
 recentActive_nearby_list.json

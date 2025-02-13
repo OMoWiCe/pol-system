@@ -2,7 +2,6 @@
 
 # Define variables
 # COMMAND="kismet -c wlan24g:name=Wifi-2.4GHz -c wlan5g:name=Wifi-5GHz"
-# COMMAND="kismet -c wlan24g:name=Wifi-2.4GHz"
 COMMAND="kismet --override pol"
 LOG_FILE="../logs/kismet.log"
 PID_FILE="/tmp/kismet_scan.pid"
