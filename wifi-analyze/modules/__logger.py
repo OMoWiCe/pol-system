@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 
 # logging level
-log_level = logging.DEBUG
+log_level = logging.INFO
 
 # Function to set up the logger
 def setup_logger(log_prefix="log"):

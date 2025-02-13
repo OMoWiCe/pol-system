@@ -88,9 +88,9 @@ def get_wifi_occupancy_list():
             })
     logger.log_message(loggerSetup, "INFO", f"Removed {len(kismet_recentActive_response) - len(ap_removed_recentActive_list)} APs from the list")
     ###--- Debug: Save raw data to file
-    logger.log_message(loggerSetup, "DEBUG", "Saving AP removed data to debug_ap-filtered-list.json")
-    with open("debug_ap-filtered-list.json", "w") as file:
-        json.dump(ap_removed_recentActive_list, file, indent=4)
+    # logger.log_message(loggerSetup, "DEBUG", "Saving AP removed data to debug_ap-filtered-list.json")
+    # with open("debug_ap-filtered-list.json", "w") as file:
+    #     json.dump(ap_removed_recentActive_list, file, indent=4)
 
 
     # Step 3: Apply filtering based on signal strength and frequency
@@ -120,11 +120,11 @@ def get_wifi_occupancy_list():
 
 
     # Step 4: Save filtered list to file
-    logger.log_message(loggerSetup, "DEBUG", f"Saving filtered data to recentActive_nearby_list.json")
-    output_file = "recentActive_nearby_list.json"
-    with open(output_file, "w") as file:
-        json.dump(recentActive_nearby_list, file, indent=4)
-    logger.log_message(loggerSetup, "INFO", f"Filtered data saved to {output_file}")
+    # logger.log_message(loggerSetup, "DEBUG", f"Saving filtered data to recentActive_nearby_list.json")
+    # output_file = "recentActive_nearby_list.json"
+    # with open(output_file, "w") as file:
+    #     json.dump(recentActive_nearby_list, file, indent=4)
+    # logger.log_message(loggerSetup, "DEBUG", f"Filtered data saved to {output_file}")
     logger.log_message(loggerSetup, "INFO", "Returning the filtered list of devices")
     module_status_code = 0
     logger.log_message(loggerSetup, "END", "Executed the WiFi algorithm")

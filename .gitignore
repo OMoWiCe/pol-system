@@ -7,6 +7,9 @@ logs/
 # Misc.
 misc/
 
+# Kismet files
+*.kismet*
+
 # Response files
 debug_ap-filtered-list.json
 recentActive_nearby_list.json

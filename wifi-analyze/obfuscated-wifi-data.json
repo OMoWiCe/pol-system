@@ -1,7 +1,11 @@
 {
     "location-id": "home",
     "device_id": "dev1",
-    "utc_timestamp": "2025-01-29T10:44:10.644965+00:00",
-    "local_timestamp": "2025-01-29T16:14:10.644965",
-    "occupancy-list": []
+    "utc_timestamp": "2025-02-13T07:16:16.326782+00:00",
+    "local_timestamp": "2025-02-13T02:16:16.326800",
+    "occupancy-list": [
+        "6760c1cc4816e8536459174a1e2e0535a557ab584a3adc3e9d188361b139c648",
+        "608fad58091b0cf2a263e40c0457f9db8746cb9aca8165ca81d57b966b411a24",
+        "13fea3c5a1db935e8eaa6d77b5486b7a80669aaea9ad12eb6c0332e407403a0e"
+    ]
 }
