@@ -1,8 +1,7 @@
 import hashlib
-import __logger as logger
 from datetime import datetime, timezone
 
-def obfuscated_wifi_data(location_id, device_id, data_list, obfuscating_field, loggerSetup):
+def obfuscated_wifi_data(location_id, device_id, data_list, obfuscating_field, logger, loggerSetup):
     """
     Creates a JSON object with obfuscated MAC addresses or other specified field.
     Args:

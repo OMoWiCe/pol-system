@@ -1,0 +1,18 @@
+/etc/kismet/kismet_memory.conf
+    tracker_device_timeout=120
+    tracker_device_packets=10
+    ulimit_mbytes=1548
+    # track_device_rrds=true
+
+/etc/kismet/kismet.conf
+    channel_hop_speed=5/sec
+    # hidedata=true
+
+/etc/kismet/kismet_wardrive.conf
+dot11_ap_only_survey=false
+dot11_fingerprint_devices=true
+
+/etc/kismet/kismet_pol.conf
+# defining the new sources for POL
+source=wlan24g:name=WiFi-2.4GHz,ht_channels=false,vht_channels=false,channels="1,2,3,4,5,6,7,8,9,10,11,12,13,14"
+source=wlan5g:name=WiFi-5GHz,ht_channels=false,vht_channels=false,channels="36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,144,149,153,157,161,165"

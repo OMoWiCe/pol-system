@@ -1,19 +1,9 @@
 import json
 import requests
 import numpy as np
-import sys
-import os
-# Dynamically add the modules directory to sys.path
-modules_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "modules")
-if modules_path not in sys.path:
-    sys.path.append(modules_path)
-# Custom modules
-import __logger as logger # type: ignore
-import __readProperties as readProperties # type: ignore
-
 
 # Function to get the WiFi occupancy counts
-def get_wifi_occupancy_list():
+def get_wifi_occupancy_list(logger, properties):
     """
     Get latest nearby Wifi devices based on signal strength
     Returns:
@@ -25,31 +15,15 @@ def get_wifi_occupancy_list():
     logger.log_message(loggerSetup, "INFO", "")
     logger.log_message(loggerSetup, "START", "Starting the WiFi Occupancy Algorithm")
     logger.enable_requests_logging(loggerSetup)
-    # Read properties
-    properties = readProperties.load_properties(loggerSetup, "wifi-occupancy algorithm")
-    try:
-        last_seen_time_threshold = int(properties["last_seen_time_threshold"])
-        out_of_range_signal_level = int(properties["out_of_range_signal_level"])
-        max_out_of_range_repeat_count = int(properties["max_out_of_range_repeat_count"])
-        signal_threshold_24GHz = int(properties["signal_threshold_24ghz"])
-        signal_threshold_5GHz = int(properties["signal_threshold_5ghz"])
-        kismet_server_ip = properties["kismet_server_ip"]
-        kismet_server_username = properties["kismet_username"]
-        kismet_server_password = properties["kismet_password"]
-    except Exception as e:
-        last_seen_time_threshold=300
-        out_of_range_signal_level=-72
-        max_out_of_range_repeat_count=10
-        signal_threshold_24GHz=-60
-        signal_threshold_5GHz=-67
-        kismet_server_ip="localhost"
+
     module_status_code = 1
 
     # Get device list active in past X seconds from Kismet API
-    API_URL = f"http://{kismet_server_username}:{kismet_server_password}@{kismet_server_ip}:2501/devices/last-time/-{last_seen_time_threshold}/devices.prettyjson"
+    API_URL = f"http://{properties['kismet_server_username']}:{properties['kismet_server_password']}@{properties['kismet_server_ip']}:2501/devices/last-time/-{properties['last_seen_time_threshold']}/devices.prettyjson"
+
     REQUEST_HEADERS = {"Content-Type": "application/json"}
     REQUEST_BODY = {
-         "fields":[
+        "fields":[
         "kismet.device.base.type",
         "kismet.device.base.macaddr",
         "kismet.device.base.signal/kismet.common.signal.signal_rrd/kismet.common.rrd.minute_vec",
@@ -60,7 +34,7 @@ def get_wifi_occupancy_list():
 
     # Step 1: Fetch data from Kismet API
     try:
-        logger.log_message(loggerSetup, "INFO", f"Fetching active devices list in last {last_seen_time_threshold} seconds from Kismet API")
+        logger.log_message(loggerSetup, "INFO", f"Fetching active devices list in last {properties['last_seen_time_threshold']} seconds from Kismet API")
         response = requests.post(API_URL, headers=REQUEST_HEADERS, json=REQUEST_BODY)
         if response.status_code != 200:
             logger.log_message(loggerSetup, "ERROR", f"Failed to fetch data: {response.status_code} {response.text}")
@@ -107,14 +81,14 @@ def get_wifi_occupancy_list():
         median_signal_level = np.median(signal_strengths_array)   # median signal level seen in last 60 seconds
         deviation_list_from_median = [abs(current_level - median_signal_level) for current_level in signal_strengths_array if current_level != 0]   
         # determine deviation of each signal level from median
-        no_of_out_of_range_count = sum(1 for each_deviation in deviation_list_from_median if each_deviation < out_of_range_signal_level)    
+        no_of_out_of_range_count = sum(1 for each_deviation in deviation_list_from_median if each_deviation < properties['out_of_range_signal_level'])    
         
         # count of signal levels which are out of range
         if frequency_band < 15:     # 2.4GHz band
-            if median_signal_level >= signal_threshold_24GHz and no_of_out_of_range_count < max_out_of_range_repeat_count:
+            if median_signal_level >= properties['signal_threshold_24GHz'] and no_of_out_of_range_count < properties['max_out_of_range_repeat_count']:
                 recentActive_nearby_list.append(device)
         elif frequency_band >= 15:  # 5GHz band
-            if median_signal_level >= signal_threshold_5GHz and no_of_out_of_range_count < max_out_of_range_repeat_count:
+            if median_signal_level >= properties['signal_threshold_5GHz'] and no_of_out_of_range_count < properties['max_out_of_range_repeat_count']:
                 recentActive_nearby_list.append(device)
     logger.log_message(loggerSetup, "INFO", f"Filtered {len(recentActive_nearby_list)} devices as near by based on signal strength")
 

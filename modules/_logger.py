@@ -84,7 +84,7 @@ def enable_requests_logging(logger):
     Args:
         logger (logging.Logger): The parent logger (e.g., logger from main-program or wifi-occupancy-algorithm).
     """
-     # Configure 'requests' logger
+    # Configure 'requests' logger
     requests_logger = logging.getLogger("requests")
     requests_logger.setLevel(log_level)
     for handler in requests_logger.handlers:

@@ -6,6 +6,7 @@ logs/
 
 # Misc.
 misc/
+.vscode/
 
 # Kismet files
 *.kismet*
