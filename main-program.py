@@ -26,8 +26,8 @@ logger.log_message(loggerSetup, "INFO", "###################   Starting the Main
 
 try:
     # reading properties
-    system_properties = readProperties.system_properties(loggerSetup, "system")
-    wifi_properties = readProperties.wifi_properties(loggerSetup, "wifi-occupancy-algo")
+    system_properties = readProperties.system_properties(loggerSetup)
+    wifi_properties = readProperties.wifi_properties(loggerSetup)
 
     # Get the WiFi occupancy list
     logger.log_message(loggerSetup, "INFO", "Getting the WiFi occupancy list...")
