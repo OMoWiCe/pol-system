@@ -78,17 +78,20 @@ def get_wifi_occupancy_list(logger, properties):
             continue
 
         # calculate values for the filtering
-        median_signal_level = np.median(signal_strengths_array)   # median signal level seen in last 60 seconds
-        deviation_list_from_median = [abs(current_level - median_signal_level) for current_level in signal_strengths_array if current_level != 0]   
-        # determine deviation of each signal level from median
-        no_of_out_of_range_count = sum(1 for each_deviation in deviation_list_from_median if each_deviation < properties['out_of_range_signal_level'])    
+        non_zero_signal_strength_array = [x for x in signal_strengths_array if x != 0] # remove zero signal levels
+        if not non_zero_signal_strength_array: # skip if all signal levels are zero
+            continue
+        median_signal_level = np.median(non_zero_signal_strength_array)  # median signal level seen in last 60 seconds 
+        deviation_list_from_median = [(current_level - (median_signal_level - properties['max_deviation'])) for current_level in non_zero_signal_strength_array if current_level != 0] # deviation of each signal level from median (positive means good signal, negative means bad signal)
+        # count of signal levels which are out of range (means bad signal)
+        no_of_out_of_range_count = sum(1 for each_deviation in deviation_list_from_median if each_deviation < 0)    
         
         # count of signal levels which are out of range
         if frequency_band < 15:     # 2.4GHz band use channel 1-14
-            if median_signal_level >= properties['signal_threshold_24GHz'] and no_of_out_of_range_count < properties['max_out_of_range_repeat_count']:
+            if median_signal_level >= properties['signal_threshold_24GHz'] and no_of_out_of_range_count <= round(len(non_zero_signal_strength_array) * properties['max_deviation_percentage']):
                 recentActive_nearby_list.append(device)
         elif frequency_band >= 15:  # 5GHz band use channel 15-165
-            if median_signal_level >= properties['signal_threshold_5GHz'] and no_of_out_of_range_count < properties['max_out_of_range_repeat_count']:
+            if median_signal_level >= properties['signal_threshold_5GHz'] and no_of_out_of_range_count <= round(len(non_zero_signal_strength_array) * properties['max_deviation_percentage']):
                 recentActive_nearby_list.append(device)
     logger.log_message(loggerSetup, "INFO", f"Filtered {len(recentActive_nearby_list)} devices as near by based on signal strength")
 

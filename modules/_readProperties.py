@@ -48,21 +48,23 @@ def system_properties(loggerSetup):
 # Function to load WiFi properties
 def wifi_properties(loggerSetup):
     properties = load_properties(loggerSetup, "wifi-occupancy-algo")
-    try:
-        last_seen_time_threshold = int(properties["last_seen_time_threshold"])
-        out_of_range_signal_level = int(properties["out_of_range_signal_level"])
-        max_out_of_range_repeat_count = int(properties["max_out_of_range_repeat_count"])
-        signal_threshold_24GHz = int(properties["signal_threshold_24ghz"])
-        signal_threshold_5GHz = int(properties["signal_threshold_5ghz"])
+    try: 
         kismet_server_ip = properties["kismet_server_ip"]
         kismet_server_username = properties["kismet_username"]
         kismet_server_password = properties["kismet_password"]
+        last_seen_time_threshold = int(properties["last_seen_time_threshold"])
+        signal_threshold_24GHz = int(properties["signal_threshold_24ghz"])
+        signal_threshold_5GHz = int(properties["signal_threshold_5ghz"])
+        max_deviation = int(properties["max_deviation"])
+        max_deviation_percentage = int(properties["max_deviation_percentage"])/100
+
     except Exception as e:
+        kismet_server_ip="localhost"
         last_seen_time_threshold=300
-        out_of_range_signal_level=-72
-        max_out_of_range_repeat_count=10
         signal_threshold_24GHz=-60
         signal_threshold_5GHz=-67
-        kismet_server_ip="localhost"
+        max_deviation=10
+        max_deviation_percentage=50
+        
     # return properties with key value pairs
-    return {"last_seen_time_threshold": last_seen_time_threshold, "out_of_range_signal_level": out_of_range_signal_level, "max_out_of_range_repeat_count": max_out_of_range_repeat_count, "signal_threshold_24GHz": signal_threshold_24GHz, "signal_threshold_5GHz": signal_threshold_5GHz, "kismet_server_ip": kismet_server_ip, "kismet_server_username": kismet_server_username, "kismet_server_password": kismet_server_password}
+    return {"last_seen_time_threshold": last_seen_time_threshold, "max_deviation": max_deviation, "max_deviation_percentage": max_deviation_percentage, "signal_threshold_24GHz": signal_threshold_24GHz, "signal_threshold_5GHz": signal_threshold_5GHz, "kismet_server_ip": kismet_server_ip, "kismet_server_username": kismet_server_username, "kismet_server_password": kismet_server_password}
