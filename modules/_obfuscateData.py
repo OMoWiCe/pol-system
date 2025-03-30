@@ -2,7 +2,7 @@ import hashlib
 from datetime import datetime, timezone
 
 def obfuscate_data(properties, wifi_data_list, cellular_data_list, logger, loggerSetup):
-    logger.log_message(loggerSetup, "INFO", "Obfuscating the WiFi & Cellular occupancy list...")
+    logger.log_message(loggerSetup, "START", "Obfuscating the WiFi & Cellular occupancy list")
 
     # Generate a key using the obfuscate secret
     obfuscate_secret = properties.get("obfuscate_secret", "")

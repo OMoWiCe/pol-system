@@ -1,14 +1,12 @@
 import json
+import time
 import requests
 import numpy as np
+import os
+import subprocess
 
 # Function to get the WiFi occupancy counts
-def get_wifi_occupancy_list(logger, properties):
-    """
-    Get latest nearby Wifi devices based on signal strength
-    Returns:
-        list: List of devices with thier details which are nearby based on signal strength.
-    """
+def get_wifi_occupancy_list(logger, properties, system_properties):
     # setting up logger
     log_prefix = "wifi-occupancy-algo"
     loggerSetup = logger.setup_logger(log_prefix)
@@ -17,6 +15,12 @@ def get_wifi_occupancy_list(logger, properties):
     logger.enable_requests_logging(loggerSetup)
 
     module_status_code = 1
+
+    # Starting Kismet Server usig bash and wait for next cloud sync
+    manage_kismet_server("start", logger, loggerSetup)
+    waiting_time = system_properties['cloud_sync_interval'] - 10
+    logger.log_message(loggerSetup, "INFO", f"Waiting for {waiting_time} seconds for next cloud sync...")
+    time.sleep(waiting_time)
 
     # Get device list active in past X seconds from Kismet API
     API_URL = f"http://{properties['kismet_server_username']}:{properties['kismet_server_password']}@{properties['kismet_server_ip']}:2501/devices/last-time/-{properties['last_seen_time_threshold']}/devices.prettyjson"
@@ -39,12 +43,14 @@ def get_wifi_occupancy_list(logger, properties):
         if response.status_code != 200:
             logger.log_message(loggerSetup, "ERROR", f"Failed to fetch data: {response.status_code} {response.text}")
             logger.log_message(loggerSetup, "END", "Execution of WiFi algorithm failed")
+            manage_kismet_server("stop", logger, loggerSetup)
             return [], module_status_code
         kismet_recentActive_response = response.json()
         logger.log_message(loggerSetup, "INFO", f"Received {len(kismet_recentActive_response)} devices from Kismet API")
     except Exception as e:
         logger.log_message(loggerSetup, "ERROR", f"An error occurred while fetching data from Kismet API: {str(e)}")
         logger.log_message(loggerSetup, "END", "Execution of WiFi algorithm failed")
+        manage_kismet_server("stop", logger, loggerSetup)
         return [], module_status_code
 
 
@@ -106,5 +112,55 @@ def get_wifi_occupancy_list(logger, properties):
 
     logger.log_message(loggerSetup, "INFO", "Returning the filtered list of devices")
     module_status_code = 0
+    manage_kismet_server("stop", logger, loggerSetup)
     logger.log_message(loggerSetup, "END", "Executed the WiFi algorithm")
     return recentActive_nearby_list, module_status_code
+
+
+# Function to manage Kismet server
+# This function starts and stops the Kismet server, and removes Kismet files if needed
+def manage_kismet_server(action, logger, loggerSetup):
+    PID_FILE = "/tmp/kismet_scan.pid"
+
+    if action == "start":
+        if os.path.exists(PID_FILE):
+            logger.log_message(loggerSetup, "WARNING", f"Kismet server is already running with PID {open(PID_FILE).read().strip()}. Trying to stop it...")
+            try:
+                with open(PID_FILE, "r") as pid_file:
+                    pid = int(pid_file.read().strip())
+                os.kill(pid, 9)
+                os.remove(PID_FILE)
+                logger.log_message(loggerSetup, "INFO", f"Kismet server with PID {pid} stopped.")
+            except Exception as e:
+                logger.log_message(loggerSetup, "WARNING", f"No previous Kismet server to stop with PID: {str(e)}")
+        try:
+            logger.log_message(loggerSetup, "INFO", "Starting Kismet server...")
+            command = ["kismet", "--override", "pol"]
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            with open(PID_FILE, "w") as pid_file:
+                pid_file.write(str(process.pid))
+            logger.log_message(loggerSetup, "INFO", f"Kismet server started with PID {process.pid}.")
+        except Exception as e:
+            logger.log_message(loggerSetup, "ERROR", f"Failed to start Kismet server: {str(e)}")
+
+    elif action == "stop":
+        if not os.path.exists(PID_FILE):
+            logger.log_message(loggerSetup, "ERROR", "No running Kismet server found.")
+            return
+        try:
+            with open(PID_FILE, "r") as pid_file:
+                pid = int(pid_file.read().strip())
+            logger.log_message(loggerSetup, "INFO", f"Stopping Kismet server with PID {pid}...")
+            os.kill(pid, 9)
+            os.remove(PID_FILE)
+            logger.log_message(loggerSetup, "INFO", "Kismet server stopped.")
+
+            # Remove Kismet files ending with .kismet and .kismet-* in the current directory
+            for filename in os.listdir("."):
+                if filename.endswith(".kismet") or filename.endswith("kismet-journal"):
+                    os.remove(filename)
+                    logger.log_message(loggerSetup, "DEBUG", f"Removed Kismet file: {filename}")
+            logger.log_message(loggerSetup, "INFO", "Removed Kismet files.")
+
+        except Exception as e:
+            logger.log_message(loggerSetup, "ERROR", f"Failed to stop Kismet server: {str(e)}")
