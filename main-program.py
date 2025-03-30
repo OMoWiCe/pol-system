@@ -26,8 +26,10 @@ logger.log_message(loggerSetup, "INFO", "###################   Starting the Main
 
 try:
     # reading properties
+    logger.log_message(loggerSetup, "INFO", f"Loading properties...")
     system_properties = readProperties.system_properties(loggerSetup)
     wifi_properties = readProperties.wifi_properties(loggerSetup)
+    cellular_properties = readProperties.cellular_properties(loggerSetup)
 
     # Get the WiFi occupancy list
     logger.log_message(loggerSetup, "INFO", "Getting the WiFi occupancy list...")
@@ -39,14 +41,17 @@ try:
         logger.log_message(loggerSetup, "INFO", "WiFi occupancy list obtained successfully!")
 
 
+    # Get the Cellular occupancy list
+    cellular_occupancy_list = []
 
     
-    # Obfuscate the wifi data
-    obfuscated_data = obfuscateData.obfuscated_wifi_data(system_properties["location_id"], system_properties["device_id"], wifi_occupancy_list, "DeviceMac",logger, loggerSetup)
-    # Save the obfuscated data to a file
-    with open("obfuscated-wifi-data.json", "w") as file:
+    # Obfuscate the data
+    obfuscated_data = obfuscateData.obfuscate_data(system_properties, wifi_occupancy_list, cellular_occupancy_list, logger, loggerSetup)
+    
+    ##--- Debug: Save the obfuscated data to a file
+    with open("obfuscated-data.json", "w") as file:
         json.dump(obfuscated_data, file, indent=4)
-    logger.log_message(loggerSetup, "DEBUG", "Obfuscated data saved to 'obfuscated-wifi-data.json' file.")
+    logger.log_message(loggerSetup, "DEBUG", "Obfuscated data saved to 'obfuscated-data.json' file.")
 
 
     logger.log_message(loggerSetup, "INFO", "###################   Ended the Main Program   ###################")

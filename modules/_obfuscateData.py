@@ -1,38 +1,53 @@
 import hashlib
 from datetime import datetime, timezone
 
-def obfuscated_wifi_data(location_id, device_id, data_list, obfuscating_field, logger, loggerSetup):
-    """
-    Creates a JSON object with obfuscated MAC addresses or other specified field.
-    Args:
-        location_id (str): The location identifier.
-        device_id (str): The device identifier.
-        data_list (list): A list of dictionaries containing data to process.
-        obfuscating_field (str): The field in the dictionaries to obfuscate.
-    Returns:
-        dict: JSON-like dictionary with obfuscated data.
-    """
-    logger.log_message(loggerSetup, "INFO", "Obfuscating the WiFi occupancy list...")
-    # Function to obfuscate the passed field
+def obfuscate_data(properties, wifi_data_list, cellular_data_list, logger, loggerSetup):
+    logger.log_message(loggerSetup, "INFO", "Obfuscating the WiFi & Cellular occupancy list...")
+
+    # Generate a key using the obfuscate secret
+    obfuscate_secret = properties.get("obfuscate_secret", "")
     def obfuscate_field(value):
-        return hashlib.sha256(value.encode()).hexdigest()
+        key = f"{value}-{obfuscate_secret}"
+        return hashlib.sha256(key.encode()).hexdigest()
     
-    # Extract and obfuscate the specified field from each item in the data list
-    obfuscated_list = [
-        obfuscate_field(item[obfuscating_field]) for item in data_list if obfuscating_field in item
+    # Get raspberrypi serial number
+    def getserial():
+        cpuserial = "0000000000000000"
+        try:
+          f = open('/proc/cpuinfo','r')
+          for line in f:
+            if line[0:6]=='Serial':
+              cpuserial = line[10:26]
+          f.close()
+        except:
+          cpuserial = "ERROR000000000"
+        
+        return cpuserial
+
+    # Extract and obfuscate the each field from data
+    wifi_obfuscating_field = "DeviceMac"
+    cellular_obfuscating_field = "TMSI"
+    wifi_obfuscated_list = [
+        obfuscate_field(item[wifi_obfuscating_field]) for item in wifi_data_list if wifi_obfuscating_field in item
     ]
-    logger.log_message(loggerSetup, "INFO", f"Obfuscated {len(obfuscated_list)} items.")
+    cellular_obfuscated_list = [
+        obfuscate_field(item[cellular_obfuscating_field]) for item in cellular_data_list if cellular_obfuscating_field in item
+    ]
+
+    logger.log_message(loggerSetup, "INFO", f"Obfuscated WiFi:{len(wifi_obfuscated_list)} and Cellular:{len(cellular_obfuscated_list)} items.")
+
     # Get the current timestamp in ISO 8601 format
     current_utc_time = datetime.now(timezone.utc).isoformat()
     current_local_time = datetime.now().isoformat()
 
     # Create the final JSON object
     obfuscated_data = {
-        "location-id": location_id,
-        "device_id": device_id,
+        "location-id": properties["location_id"],
+        "device_id": f"{properties["device_id"]}-pi-{getserial()}",
         "utc_timestamp": current_utc_time,
         "local_timestamp": current_local_time,
-        "occupancy-list": obfuscated_list
+        "wifi-occupancy-list": wifi_obfuscated_list,
+        "cellular-occupancy-list": cellular_obfuscated_list
     }
-    logger.log_message(loggerSetup, "INFO", "WiFi occupancy data is ready to be sent!")
+    logger.log_message(loggerSetup, "INFO", "Occupancy data is ready to be sent!")
     return obfuscated_data

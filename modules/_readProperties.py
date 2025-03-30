@@ -14,7 +14,6 @@ def load_properties(loggerSetup, module:str):
     Returns:
         dict: Dictionary of properties and their values.
     """
-    logger.log_message(loggerSetup, "INFO", f"Loading {module} properties...")
     # Get the project root directory
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     # Define the path to the properties file (located one directory before)
@@ -37,12 +36,15 @@ def system_properties(loggerSetup):
     try:
         location_id = properties["location_id"]
         device_id = properties["device_id"]
+        cloud_sync_interval = int(properties["cloud_sync_interval"])
+        obfuscate_secret = properties["obfuscate_secret"]
     except Exception as e:
         location_id = "default"
         device_id = "default"
+        cloud_sync_interval = 300
+        obfuscate_secret = "default"
     # return properties with key value pairs
-    return {"location_id": location_id, "device_id": device_id}
-
+    return {"location_id": location_id, "device_id": device_id, "cloud_sync_interval": cloud_sync_interval, "obfuscate_secret": obfuscate_secret}
 
 
 # Function to load WiFi properties
@@ -56,7 +58,7 @@ def wifi_properties(loggerSetup):
         signal_threshold_24GHz = int(properties["signal_threshold_24ghz"])
         signal_threshold_5GHz = int(properties["signal_threshold_5ghz"])
         max_deviation = int(properties["max_deviation"])
-        max_deviation_percentage = int(properties["max_deviation_percentage"])/100
+        max_deviation_percentage = float(properties["max_deviation_percentage"])/100
 
     except Exception as e:
         kismet_server_ip="localhost"
@@ -68,3 +70,20 @@ def wifi_properties(loggerSetup):
         
     # return properties with key value pairs
     return {"last_seen_time_threshold": last_seen_time_threshold, "max_deviation": max_deviation, "max_deviation_percentage": max_deviation_percentage, "signal_threshold_24GHz": signal_threshold_24GHz, "signal_threshold_5GHz": signal_threshold_5GHz, "kismet_server_ip": kismet_server_ip, "kismet_server_username": kismet_server_username, "kismet_server_password": kismet_server_password}
+
+# Function to load Cellular properties
+def cellular_properties(loggerSetup):
+    properties = load_properties(loggerSetup, "cellular-occupancy-algo")
+    try:
+        sdr_sample_rate = float(properties["sdr_sample_rate"])
+        cellular_mode = properties["cellular_mode"]
+        cellular_band = properties["cellular_band"]
+        signal_threshold = int(properties["signal_threshold"])
+    except Exception as e:
+        sdr_sample_rate = 1.6e6
+        cellular_mode = "GSM"
+        cellular_band = 'GSM900, DCS1800'
+        signal_threshold = -30
+
+    # return properties with key value pairs
+    return {"sdr_sample_rate": sdr_sample_rate, "cellular_mode": cellular_mode, "cellular_band": cellular_band, "signal_threshold": signal_threshold}
