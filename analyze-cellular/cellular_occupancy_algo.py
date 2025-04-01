@@ -4,6 +4,19 @@ import time
 import subprocess
 import signal
 
+# Function to handle termination signals for subprocesses
+active_processes = []
+def terminate_processes(signal_received, frame):
+    global active_processes
+    for process in active_processes:
+        try:
+            os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+        except Exception as e:
+            pass  # Ignore errors during termination
+    exit(0)
+# Register the signal handler
+signal.signal(signal.SIGINT, terminate_processes)
+
 # Function to read the channel data from nearby_channels.json file
 def read_channel_file(file_path, cell_scan_expire_time, logger, loggerSetup):
     try:
@@ -45,11 +58,15 @@ def cell_scan(bands, sample_rate, logger, loggerSetup):
         for band in bands:
             logger.log_message(loggerSetup, "DEBUG", f"Scanning band: {band}")
             command = f"grgsm_scanner -b {band} -s {sample_rate} --speed=5 --arg=hackrf"
-            result = subprocess.run(command, shell=True, capture_output=True, text=True)
-            if result.returncode != 0:
+            # handle the process group to allow for termination
+            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)  # Use os.setsid
+            active_processes.append(process)  # Register the process
+            result = process.communicate()  # Wait for the process to complete
+            active_processes.remove(process)  # Remove the process after completion
+            if process.returncode != 0:
                 logger.log_message(loggerSetup, "ERROR", f"Error running command: {command}")
                 continue
-            for line in result.stdout.splitlines():
+            for line in result[0].decode('utf-8').splitlines():
                 if "ARFCN" in line:
                     parts = line.split(",")
                     arfcn = parts[0].split(":")[1].strip()
@@ -78,6 +95,7 @@ def channel_capture(frequency, sample_rate, logger, loggerSetup):
     logger.log_message(loggerSetup, "DEBUG", f"Starting channel capture on frequency: {frequency} with sample rate: {sample_rate}")
     command = f"grgsm_livemon_headless -f {frequency} -s {sample_rate} --args=hackrf"
     process = subprocess.Popen(command, shell=True, preexec_fn=os.setsid)  # Use os.setsid to create a new process group
+    active_processes.append(process)  # Register the process
     return process
 
 # Function to decode packets using tshark
@@ -85,6 +103,7 @@ def decode_packets(logger, loggerSetup):
     logger.log_message(loggerSetup, "DEBUG", "Starting packet decoding with tshark")
     command = "sudo tshark -i lo -Y 'e212.imsi' -V"
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)  # Use os.setsid
+    active_processes.append(process)  # Register the process
     return process
 
 # Function to filter the decoded packets and get the required details
@@ -183,6 +202,9 @@ def get_cellular_occupancy_list(logger, cellular_properties, system_properties):
             logger.log_message(loggerSetup, "INFO", f"Using newly scanned channels.")
             # Read the channel data from the file
             channels = read_channel_file(channel_list_file_path, cell_scan_expire_time, logger, loggerSetup)
+            if not channels:
+                logger.log_message(loggerSetup, "ERROR", f"No channels found after cell scan.")
+                return [], module_status_code
 
         # Calculate cell_timer
         # reduce the cell_timer when performing the cell_scan

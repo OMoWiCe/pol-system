@@ -32,13 +32,13 @@ loggerSetup = logger.setup_logger(log_prefix, log_module)
 logger.log_message(loggerSetup, "INFO", "###################   Starting the Main Program   ###################")
 
 try:
-    # reading properties
+    ####### reading properties
     logger.log_message(loggerSetup, "INFO", f"Loading properties...")
     system_properties = readProperties.system_properties(loggerSetup)
     wifi_properties = readProperties.wifi_properties(loggerSetup)
     cellular_properties = readProperties.cellular_properties(loggerSetup)
 
-    # Check if the required modules are available
+    ####### Check if the required modules are available
     logger.log_message(loggerSetup, "INFO", "Checking the devices...")
     module_status_code = checkModules.check_devices(logger, loggerSetup)
     if module_status_code != 0:
@@ -46,7 +46,7 @@ try:
     else:
         logger.log_message(loggerSetup, "INFO", "All devices are available!")
 
-    # Run WiFi and Cellular occupancy list retrieval in parallel
+    ####### Run WiFi and Cellular occupancy list retrieval in parallel
     logger.log_message(loggerSetup, "INFO", "Getting the WiFi and Cellular occupancy lists in parallel...")
     with concurrent.futures.ThreadPoolExecutor() as executor:
         wifi_future = executor.submit(wifiOccupancy.get_wifi_occupancy_list, logger, wifi_properties, system_properties)
@@ -70,13 +70,17 @@ try:
     else:
         logger.log_message(loggerSetup, "INFO", "Cellular occupancy list obtained successfully!")
 
-    # Obfuscate the data
+    ####### Obfuscate the data
     obfuscated_data = obfuscateData.obfuscate_data(system_properties, wifi_occupancy_list, cellular_occupancy_list, logger, loggerSetup)
     
     ##--- Debug: Save the obfuscated data to a file
     with open("obfuscated-data.json", "w") as file:
         json.dump(obfuscated_data, file, indent=4)
     logger.log_message(loggerSetup, "DEBUG", "Obfuscated data saved to 'obfuscated-data.json' file.")
+
+    ####### Sending the obfuscated data to the cloud
+    #TODO: Implement the cloud sending function
+
 
 
     logger.log_message(loggerSetup, "INFO", "###################   Ended the Main Program   ###################")
