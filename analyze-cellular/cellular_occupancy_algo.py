@@ -1,76 +1,52 @@
-# How the Cellular Occupancy ALO algorithm works
-
-# Read nearby_channels.json file
-# If file not found or empty, run cell_scan function
-    # cell_scan function: scan each given band and store channel, its frequency in a list
-        # command: grgsm_scanner -b GSM900 -s 1600000.0 --speed=5 -v
-        # command: grgsm_scanner -b DCS1800 -s 1600000.0 --speed=5 -v
-    # then save the list to nearby_channels.json file
-    # once done re execute this python program
-# If file is not empty, read the file and add the data to a list
-# channels = [{
-#     "arfcn": 0,
-#     "band": "GSM900",
-#     "frequency": 935.0}]
-
-# calculate cell_timer by dividing cloud_sync_interval by number of channels and minus 1sec
-# Loop through the channels
-    # if the channel is not empty, run the channel_capture function
-    # start cell_timer
-    # Run packet_capture function and decode_packets functions parallelly
-        # packet_capture command: grgsm_livemon_headless -f 936.6M -s 1.4M
-        # decode_packets command: sudo tshark -i lo -Y "e212.imsi" -V (And then need to filter the output to get below details)
-    # Add decoded packets details which has TMSI to a list (May has multiple TMSI, add all to the list)
-        # mobile_stations = [
-#               { tmsi: "0x120ff0d7",
-#                 arfcn: "7",
-#                 signal_level: "-65"}
-#               ]
-    # stop packet_capture and decode_packets functions when cell_timer is up
-# if no more channels, get the unique IMSI from the list
-# return the unique IMSI list
-
-## Let's code now :D
-
 import os
 import json
 import time
 import subprocess
+import signal
 
 # Function to read the channel data from nearby_channels.json file
-def read_channel_file(file_path, logger):
+def read_channel_file(file_path, cell_scan_expire_time, logger, loggerSetup):
     try:
         if os.path.exists(file_path):
+            # Compare the file's modification time with the current time
+            current_time = time.time()
+            file_mod_time = os.path.getmtime(file_path)
+            # If the file is older than cell_scan_expire_time, run cell_scan
+            if current_time - file_mod_time > cell_scan_expire_time:
+                logger.log_message(loggerSetup, "WARNING", f"File {file_path} is older than {cell_scan_expire_time} seconds. Running cell_scan...")
+                return None
+            # If the file is not older than cell_scan_expire_time, read the data
             with open(file_path, 'r') as file:
                 data = json.load(file)
-                logger.log_message(logger, "INFO", f"Read {len(data)} channels from {file_path}")
+                logger.log_message(loggerSetup, "INFO", f"Read {len(data)} channels from {file_path}")
                 return data
         else:
-            logger.log_message(logger, "ERROR", f"File {file_path} not found. Running cell_scan...")
+            logger.log_message(loggerSetup, "ERROR", f"File {file_path} not found. Running cell_scan...")
             return None
     except Exception as e:
-        logger.log_message(logger, "ERROR", f"Error reading channel file: {e}")
+        logger.log_message(loggerSetup, "ERROR", f"Error reading channel file: {e}")
         return None
 
 # Function to write the channel data to nearby_channels.json file
-def write_channel_file(file_path, data, logger):
+def write_channel_file(file_path, data, logger, loggerSetup):
     try:
         with open(file_path, 'w') as file:
             json.dump(data, file, indent=4)
-            logger.log_message(logger, "INFO", f"Wrote {len(data)} channels to {file_path}")
+            logger.log_message(loggerSetup, "INFO", f"Wrote {len(data)} channels to {file_path}")
     except Exception as e:
-        logger.log_message(logger, "ERROR", f"Error writing channel file: {e}")
+        logger.log_message(loggerSetup, "ERROR", f"Error writing channel file: {e}")
 
 # Function to scan the channels using grgsm_scanner
-def cell_scan(bands, sample_rate, logger):
+def cell_scan(bands, sample_rate, logger, loggerSetup):
     try:
-        logger.log_message(logger, "INFO", f"Starting Scanning bands: {bands} with sample rate: {sample_rate}")
+        logger.log_message(loggerSetup, "INFO", f"Starting Scanning bands: {bands} with sample rate: {sample_rate}")
         channels = []
         for band in bands:
-            command = f"grgsm_scanner -b {band} -s {sample_rate} --speed=5"
+            logger.log_message(loggerSetup, "DEBUG", f"Scanning band: {band}")
+            command = f"grgsm_scanner -b {band} -s {sample_rate} --speed=5 --arg=hackrf"
             result = subprocess.run(command, shell=True, capture_output=True, text=True)
             if result.returncode != 0:
-                logger.log_message(logger, "ERROR", f"Error running command: {command}")
+                logger.log_message(loggerSetup, "ERROR", f"Error running command: {command}")
                 continue
             for line in result.stdout.splitlines():
                 if "ARFCN" in line:
@@ -79,67 +55,102 @@ def cell_scan(bands, sample_rate, logger):
                     frequency = parts[1].split(":")[1].strip()
                     power = parts[6].split(":")[1].strip()
                     channels.append({"arfcn": arfcn, "frequency": frequency, "power": power, "band": band})
-                    logger.log_message(logger, "DEBUG", f"Found channel: {arfcn}, frequency: {frequency}, power: {power}, band: {band}")
-        logger.log_message(logger, "INFO", f"Found {len(channels)} channels in total")
+                    logger.log_message(loggerSetup, "DEBUG", f"Found channel: {arfcn}, frequency: {frequency}, power: {power}, band: {band}")
+        logger.log_message(loggerSetup, "INFO", f"Found {len(channels)} channels in total")
+        # getting the unique channels
+        unique_channels = []
+        unique_channels_list = []
+        for channel in channels:
+            if channel["arfcn"] not in unique_channels:
+                unique_channels.append(channel["arfcn"])
+                unique_channels_list.append(channel)
+        channels = unique_channels_list
+        logger.log_message(loggerSetup, "INFO", f"Found {len(unique_channels)} unique channels")
         return channels
     except Exception as e:
-        logger.log_message(logger, "ERROR", f"Error during cell scan: {e}")
+        logger.log_message(loggerSetup, "ERROR", f"Error during cell scan: {e}")
         return []
 
 # Function to capture packets using grgsm_livemon_headless
-def channel_capture(frequency, sample_rate, logger):
-    logger.log_message(logger, "DEBUG", f"Starting channel capture on frequency: {frequency} with sample rate: {sample_rate}")
-    command = f"grgsm_livemon_headless -f {frequency}M -s {sample_rate}"
-    process = subprocess.Popen(command, shell=True)
+def channel_capture(frequency, sample_rate, logger, loggerSetup):
+    logger.log_message(loggerSetup, "DEBUG", f"Starting channel capture on frequency: {frequency} with sample rate: {sample_rate}")
+    command = f"grgsm_livemon_headless -f {frequency} -s {sample_rate} --args=hackrf"
+    process = subprocess.Popen(command, shell=True, preexec_fn=os.setsid)  # Use os.setsid to create a new process group
     return process
 
 # Function to decode packets using tshark
-def decode_packets(logger):
-    logger.log_message(logger, "DEBUG", "Starting packet decoding with tshark")
+def decode_packets(logger, loggerSetup):
+    logger.log_message(loggerSetup, "DEBUG", "Starting packet decoding with tshark")
     command = "sudo tshark -i lo -Y 'e212.imsi' -V"
-    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)  # Use os.setsid
     return process
 
 # Function to filter the decoded packets and get the required details
-def filter_packets(output, logger):
-    logger.log_message(logger, "DEBUG", "Filtering packets for TMSI")
+def filter_packets(output, frequency, logger, loggerSetup):
+    logger.log_message(loggerSetup, "DEBUG", "Filtering packets for TMSI, ARFCN, Signal Level")
     mobile_stations = []
-    lines = output.splitlines()
+    lines = output.decode('utf-8').splitlines()  # Decode bytes to string and split into lines
+    current_station = {}
+
     for line in lines:
-        if "TMSI" in line:
-            parts = line.split()
-            tmsi = parts[1]
-            arfcn = parts[3]
-            signal_level = parts[5]
-            mobile_stations.append({"tmsi": tmsi, "arfcn": arfcn, "signal_level": signal_level})
-            logger.log_message(logger, "DEBUG", f"Found mobile station: TMSI: {tmsi}, ARFCN: {arfcn}, Signal Level: {signal_level}")
-    logger.log_message(logger, "DEBUG", f"Filtered {len(mobile_stations)} mobile stations")
+        line = line.strip()
+        if "TMSI/P-TMSI:" in line:
+            tmsi = line.split(":")[1].strip()
+            current_station["tmsi"] = tmsi
+        elif "ARFCN:" in line:
+            arfcn = line.split(":")[1].split()[0].strip()
+            current_station["arfcn"] = arfcn
+        elif "Signal Level:" in line:
+            signal_level = line.split(":")[1].strip().split()[0]
+            current_station["signal_level"] = signal_level
+        elif "Frame" in line and current_station:  # New frame indicates end of current station
+            if "tmsi" in current_station:
+                mobile_stations.append(current_station)
+                current_station = {}
+    # Add the last station if it exists
+    if current_station:
+        mobile_stations.append(current_station)
+    logger.log_message(loggerSetup, "DEBUG", f"Filtered {len(mobile_stations)} mobile stations for the {frequency} frequency")
     return mobile_stations
 
 # Function to run the packet capture and decoding in parallel
-def run_capture_and_decode(frequency, sample_rate, cell_timer, logger):
+def run_capture_and_decode(frequency, sample_rate, cell_timer, logger, loggerSetup):
     try:
-        capture_process = channel_capture(frequency, sample_rate, logger)
-        decode_process = decode_packets(logger)
+        # Start the processes
+        capture_process = channel_capture(frequency, sample_rate, logger, loggerSetup)
+        decode_process = decode_packets(logger, loggerSetup)
+        # Sleep for the specified duration
         time.sleep(cell_timer)
-        capture_process.terminate()
-        decode_process.terminate()
-        logger.log_message(logger, "DEBUG", f"Terminated capture and decode processes after {cell_timer} seconds for frequency: {frequency}")
-        return capture_process, decode_process
+
+        # Terminate the process groups
+        os.killpg(os.getpgid(capture_process.pid), signal.SIGTERM)  # Terminate capture process group
+        os.killpg(os.getpgid(decode_process.pid), signal.SIGTERM)  # Terminate decode process group
+        logger.log_message(loggerSetup, "DEBUG", f"Terminated capture and decode processes after {cell_timer} seconds for frequency: {frequency}")
     except Exception as e:
-        logger.log_message(logger, "ERROR", f"Error during capture and decode: {e}")
-        return None, None
+        logger.log_message(loggerSetup, "ERROR", f"Error terminating processes: {e}")
+    finally:
+        # Ensure resources are cleaned up
+        capture_process.wait()
+        decode_process.wait()
+    return capture_process, decode_process
 
-# Function to get unique TMSI from the mobile stations list
-def get_unique_tmsi(mobile_stations, logger):
-    unique_tmsi = set()
+# Function to get unique TMSI from the mobile stations list and filter based on the signal level
+def get_unique_ms(mobile_stations, signal_threshold, logger, loggerSetup):
+    unique_tmsi = []
+    unique_ms = []
     for station in mobile_stations:
-        unique_tmsi.add(station["tmsi"])
-    logger.log_message(logger, "INFO", f"Found {len(unique_tmsi)} unique TMSI")
-    return list(unique_tmsi)
+        tmsi = station["tmsi"]
+        if tmsi not in unique_tmsi:
+            unique_tmsi.append(tmsi)
+            # Check if the signal level is above the threshold
+            if int(station["signal_level"]) >= signal_threshold:
+                unique_ms.append(station)
+    logger.log_message(loggerSetup, "INFO", f"Found {len(unique_tmsi)} unique Mobile Stations")
+    logger.log_message(loggerSetup, "INFO", f"Nearest Mobile Stations count: {len(unique_ms)}")
+    return unique_ms
 
 
-################ Main function to run the Cellular Occupancy ALO algorithm
+################ Main function to run the Cellular Occupancy ALO algorithm ###############
 def get_cellular_occupancy_list(logger, cellular_properties, system_properties):
     try:
         # setting up logger
@@ -156,17 +167,19 @@ def get_cellular_occupancy_list(logger, cellular_properties, system_properties):
         bands = cellular_properties["cellular_band"]
         sample_rate = cellular_properties["sdr_sample_rate"]
         signal_threshold = cellular_properties["signal_threshold"]
+        cell_scan_expire_time = cellular_properties["cell_scan_expire_time"]
         cell_timer = 0
         mobile_stations = []
 
         # Read the channel data from the file
-        channels = read_channel_file(channel_list_file_path, logger)
+        channels = read_channel_file(channel_list_file_path, cell_scan_expire_time, logger, loggerSetup)
         # If the file is empty or not found, run the cell_scan function
         if not channels:
-            channels = cell_scan(bands, sample_rate, logger)
-            write_channel_file(channel_list_file_path, channels, logger)
-            logger.log_message(loggerSetup, "INFO", f"Restart the Cellular Occupancy Algorithem to use the scanned channels.")
-            return [], module_status_code
+            channels = cell_scan(bands, sample_rate, logger, loggerSetup)
+            write_channel_file(channel_list_file_path, channels, logger, loggerSetup)
+            logger.log_message(loggerSetup, "INFO", f"Using newly scanned channels.")
+            # Read the channel data from the file
+            channels = read_channel_file(channel_list_file_path, cell_scan_expire_time, logger, loggerSetup)
 
         # Calculate cell_timer
         cell_timer = (system_properties["cloud_sync_interval"] / len(channels)) - 1
@@ -176,21 +189,23 @@ def get_cellular_occupancy_list(logger, cellular_properties, system_properties):
         logger.log_message(loggerSetup, "INFO", f"Starting packet capture on {len(channels)} channels...")
         for channel in channels:
             frequency = channel["frequency"]
-            capture_process, decode_process = run_capture_and_decode(frequency, sample_rate, cell_timer, logger)
+            capture_process, decode_process = run_capture_and_decode(frequency, sample_rate, cell_timer, logger, loggerSetup)
             if not capture_process or not decode_process:
                 continue
             # Get the output from the decode process
             output, _ = decode_process.communicate()
             # Filter the packets and get the mobile stations
-            filtered_stations = filter_packets(output, logger)
+            filtered_stations = filter_packets(output, frequency, logger, loggerSetup)
             mobile_stations.extend(filtered_stations)
         logger.log_message(loggerSetup, "INFO", f"Captured {len(mobile_stations)} mobile stations in total")
 
         # Get unique TMSI from the mobile stations list
         logger.log_message(loggerSetup, "INFO", f"Getting unique TMSI from the mobile stations list...")
-        unique_ms = get_unique_tmsi(mobile_stations, logger)
+        unique_ms = get_unique_ms(mobile_stations, signal_threshold, logger, loggerSetup)
 
         module_status_code = 0
+        logger.log_message(loggerSetup, "END", "Executed the Cellular algorithm")
         return unique_ms, module_status_code
     except Exception as e:
+        logger.log_message(loggerSetup, "ERROR", f"Error in Cellular Occupancy Algorithm: {e}")
         return [], module_status_code

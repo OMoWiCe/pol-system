@@ -81,11 +81,15 @@ def cellular_properties(loggerSetup):
             raise ValueError("Invalid cellular mode. Must be 'GSM', 'UMTS', or 'LTE'.")
         cellular_band = [band.strip() for band in properties["cellular_band"].split(",")]
         signal_threshold = int(properties["signal_threshold"])
+        cell_scan_expire_time = int(properties["cell_scan_expire_time"])
+        if cell_scan_expire_time <= 0:
+            raise ValueError("cell_scan_expire_time must be a positive integer.")
     except Exception as e:
         sdr_sample_rate = 1.6e6
         cellular_mode = "GSM"
         cellular_band = 'GSM900, DCS1800'
         signal_threshold = -30
+        cell_scan_expire_time = 1800
 
     # return properties with key value pairs
-    return {"sdr_sample_rate": sdr_sample_rate, "cellular_mode": cellular_mode, "cellular_band": cellular_band, "signal_threshold": signal_threshold}
+    return {"sdr_sample_rate": sdr_sample_rate, "cellular_mode": cellular_mode, "cellular_band": cellular_band, "signal_threshold": signal_threshold, "cell_scan_expire_time": cell_scan_expire_time}
