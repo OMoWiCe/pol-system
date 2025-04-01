@@ -15,15 +15,16 @@ def get_wifi_occupancy_list(logger, properties, system_properties):
     logger.enable_requests_logging(loggerSetup)
 
     module_status_code = 1
+    last_seen_time_threshold = system_properties['cloud_sync_interval']
 
     # Starting Kismet Server usig bash and wait for next cloud sync
     manage_kismet_server("start", logger, loggerSetup)
-    waiting_time = system_properties['cloud_sync_interval'] - 5
-    logger.log_message(loggerSetup, "INFO", f"Capturing for {waiting_time} seconds till next cloud sync...")
-    time.sleep(waiting_time)
+    capturing_time = system_properties['cloud_sync_interval'] - 5
+    logger.log_message(loggerSetup, "INFO", f"Capturing for {capturing_time} seconds till next cloud sync...")
+    time.sleep(capturing_time)
 
     # Get device list active in past X seconds from Kismet API
-    API_URL = f"http://{properties['kismet_server_username']}:{properties['kismet_server_password']}@{properties['kismet_server_ip']}:2501/devices/last-time/-{properties['last_seen_time_threshold']}/devices.prettyjson"
+    API_URL = f"http://{properties['kismet_server_username']}:{properties['kismet_server_password']}@{properties['kismet_server_ip']}:2501/devices/last-time/-{last_seen_time_threshold}/devices.prettyjson"
 
     REQUEST_HEADERS = {"Content-Type": "application/json"}
     REQUEST_BODY = {
@@ -38,7 +39,7 @@ def get_wifi_occupancy_list(logger, properties, system_properties):
 
     # Step 1: Fetch data from Kismet API
     try:
-        logger.log_message(loggerSetup, "INFO", f"Fetching active devices list in last {properties['last_seen_time_threshold']} seconds from Kismet API")
+        logger.log_message(loggerSetup, "INFO", f"Fetching active devices list in last {last_seen_time_threshold} seconds from Kismet API")
         response = requests.post(API_URL, headers=REQUEST_HEADERS, json=REQUEST_BODY)
         if response.status_code != 200:
             logger.log_message(loggerSetup, "ERROR", f"Failed to fetch data: {response.status_code} {response.text}")

@@ -1,6 +1,3 @@
-## Check whether HackRF device is connected and two external WiFi adapters are connected
-## Use bash commands to check the devices
-
 import subprocess
 
 def check_devices(logger,loggerSetup):

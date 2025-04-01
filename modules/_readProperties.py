@@ -7,13 +7,6 @@ file_name="system.properties"
 
 # Function to load properties from a file
 def load_properties(loggerSetup, module:str):
-    """
-    Loads properties from a file and returns them as a dictionary.
-    Args:
-        file_name (str): Name of the properties file (default: system.properties).
-    Returns:
-        dict: Dictionary of properties and their values.
-    """
     # Get the project root directory
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     # Define the path to the properties file (located one directory before)
@@ -54,7 +47,6 @@ def wifi_properties(loggerSetup):
         kismet_server_ip = properties["kismet_server_ip"]
         kismet_server_username = properties["kismet_username"]
         kismet_server_password = properties["kismet_password"]
-        last_seen_time_threshold = int(properties["last_seen_time_threshold"])
         signal_threshold_24GHz = int(properties["signal_threshold_24ghz"])
         signal_threshold_5GHz = int(properties["signal_threshold_5ghz"])
         max_deviation = int(properties["max_deviation"])
@@ -62,14 +54,13 @@ def wifi_properties(loggerSetup):
 
     except Exception as e:
         kismet_server_ip="localhost"
-        last_seen_time_threshold=300
         signal_threshold_24GHz=-60
         signal_threshold_5GHz=-67
         max_deviation=10
         max_deviation_percentage=50
         
     # return properties with key value pairs
-    return {"last_seen_time_threshold": last_seen_time_threshold, "max_deviation": max_deviation, "max_deviation_percentage": max_deviation_percentage, "signal_threshold_24GHz": signal_threshold_24GHz, "signal_threshold_5GHz": signal_threshold_5GHz, "kismet_server_ip": kismet_server_ip, "kismet_server_username": kismet_server_username, "kismet_server_password": kismet_server_password}
+    return {"max_deviation": max_deviation, "max_deviation_percentage": max_deviation_percentage, "signal_threshold_24GHz": signal_threshold_24GHz, "signal_threshold_5GHz": signal_threshold_5GHz, "kismet_server_ip": kismet_server_ip, "kismet_server_username": kismet_server_username, "kismet_server_password": kismet_server_password}
 
 # Function to load Cellular properties
 def cellular_properties(loggerSetup):
