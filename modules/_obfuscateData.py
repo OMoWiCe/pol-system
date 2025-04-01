@@ -26,7 +26,7 @@ def obfuscate_data(properties, wifi_data_list, cellular_data_list, logger, logge
 
     # Extract and obfuscate the each field from data
     wifi_obfuscating_field = "DeviceMac"
-    cellular_obfuscating_field = "TMSI"
+    cellular_obfuscating_field = "tmsi"
     wifi_obfuscated_list = [
         obfuscate_field(item[wifi_obfuscating_field]) for item in wifi_data_list if wifi_obfuscating_field in item
     ]

@@ -77,7 +77,9 @@ def cellular_properties(loggerSetup):
     try:
         sdr_sample_rate = float(properties["sdr_sample_rate"])
         cellular_mode = properties["cellular_mode"]
-        cellular_band = properties["cellular_band"]
+        if cellular_mode not in ["GSM", "UMTS", "LTE"]:
+            raise ValueError("Invalid cellular mode. Must be 'GSM', 'UMTS', or 'LTE'.")
+        cellular_band = [band.strip() for band in properties["cellular_band"].split(",")]
         signal_threshold = int(properties["signal_threshold"])
     except Exception as e:
         sdr_sample_rate = 1.6e6

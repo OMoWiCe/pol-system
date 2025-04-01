@@ -10,12 +10,17 @@ if modules_path not in sys.path:
 analyze_wifi_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "analyze-wifi")
 if analyze_wifi_path not in sys.path:
     sys.path.append(analyze_wifi_path)
+# Dynamically add the analyze-cellular directory to sys.path
+analyze_cellular_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "analyze-cellular")
+if analyze_cellular_path not in sys.path:
+    sys.path.append(analyze_cellular_path)
 # Custom modules
 import _logger as logger
 import _readProperties as readProperties
 import _checkModules as checkModules
 import _obfuscateData as obfuscateData
 import wifi_occupancy_algo as wifiOccupancy
+import cellular_occupancy_algo as cellularOccupancy
 
 
 ################# Execution starts here #################
@@ -51,7 +56,13 @@ try:
 
 
     # Get the Cellular occupancy list
-    cellular_occupancy_list = []
+    logger.log_message(loggerSetup, "INFO", "Getting the Cellular occupancy list...")
+    cellular_occupancy_list, module_status_code = cellularOccupancy.get_cellular_occupancy_list(logger, cellular_properties, system_properties)
+    if module_status_code != 0:
+        logger.log_message(loggerSetup, "ERROR", "Error occurred while getting the Cellular occupancy list.")
+        sys.exit(1)
+    else:
+        logger.log_message(loggerSetup, "INFO", "Cellular occupancy list obtained successfully!")
 
     
     # Obfuscate the data
