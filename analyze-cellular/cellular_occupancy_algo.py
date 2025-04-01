@@ -32,7 +32,7 @@ def write_channel_file(file_path, data, logger, loggerSetup):
     try:
         with open(file_path, 'w') as file:
             json.dump(data, file, indent=4)
-            logger.log_message(loggerSetup, "INFO", f"Wrote {len(data)} channels to {file_path}")
+            logger.log_message(loggerSetup, "DEBUG", f"Wrote {len(data)} channels to {file_path}")
     except Exception as e:
         logger.log_message(loggerSetup, "ERROR", f"Error writing channel file: {e}")
 
@@ -56,7 +56,7 @@ def cell_scan(bands, sample_rate, logger, loggerSetup):
                     power = parts[6].split(":")[1].strip()
                     channels.append({"arfcn": arfcn, "frequency": frequency, "power": power, "band": band})
                     logger.log_message(loggerSetup, "DEBUG", f"Found channel: {arfcn}, frequency: {frequency}, power: {power}, band: {band}")
-        logger.log_message(loggerSetup, "INFO", f"Found {len(channels)} channels in total")
+        logger.log_message(loggerSetup, "DEBUG", f"Found {len(channels)} channels in total")
         # getting the unique channels
         unique_channels = []
         unique_channels_list = []
@@ -108,9 +108,9 @@ def filter_packets(output, frequency, logger, loggerSetup):
                 mobile_stations.append(current_station)
                 current_station = {}
     # Add the last station if it exists
-    if current_station:
+    if current_station and "tmsi" in current_station:
         mobile_stations.append(current_station)
-    logger.log_message(loggerSetup, "DEBUG", f"Filtered {len(mobile_stations)} mobile stations for the {frequency} frequency")
+    logger.log_message(loggerSetup, "INFO", f"Filtered {len(mobile_stations)} mobile stations for the {frequency} frequency")
     return mobile_stations
 
 # Function to run the packet capture and decoding in parallel
@@ -155,8 +155,8 @@ def get_cellular_occupancy_list(logger, cellular_properties, system_properties):
     try:
         # setting up logger
         log_prefix = "cellular-occupancy-algo"
-        loggerSetup = logger.setup_logger(log_prefix)
-        logger.log_message(loggerSetup, "INFO", "")
+        log_module = "Cellular"
+        loggerSetup = logger.setup_logger(log_prefix, log_module)
         logger.log_message(loggerSetup, "START", "Starting the Cellular Occupancy Algorithm")
         logger.enable_requests_logging(loggerSetup)
 

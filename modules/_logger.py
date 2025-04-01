@@ -6,15 +6,7 @@ from datetime import datetime
 log_level = logging.INFO
 
 # Function to set up the logger
-def setup_logger(log_prefix="log"):
-    """
-    Sets up the logger instance.
-    Creates a logs folder in the project directory and writes logs to a date-appended file.
-    Args:
-        log_prefix (str): Prefix for the log file name.
-    Returns:
-        logging.Logger: Configured logger instance.
-    """
+def setup_logger(log_prefix="log", log_module="Main"):
     # Get the project root directory by navigating two levels up
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     # Define the logs folder in the project root
@@ -39,7 +31,7 @@ def setup_logger(log_prefix="log"):
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(log_level)
     # Create a formatter and set it for both handlers
-    formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+    formatter = logging.Formatter(f"%(asctime)s [{log_module}] [%(levelname)s] %(message)s")
     file_handler.setFormatter(formatter)
     stream_handler.setFormatter(formatter)
 
@@ -51,13 +43,6 @@ def setup_logger(log_prefix="log"):
 
 # Function to log messages with different levels
 def log_message(logger, level: str, message: str):
-    """
-    Logs a message with the specified logging level using the given logger.
-    Args:
-        logger (logging.Logger): The logger instance to use for logging.
-        level (str): Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).
-        message (str): The message to log.
-    """
     level = level.upper()
     if level == "START":
         logger.info(f"{'-' * 20} \t{message}\t {'-' * 20}")
@@ -79,11 +64,6 @@ def log_message(logger, level: str, message: str):
 
 # Function to enable debug logging for the 'requests' module
 def enable_requests_logging(logger):
-    """
-    Configures the 'requests' logger to use the same handler as the provided parent logger.
-    Args:
-        logger (logging.Logger): The parent logger (e.g., logger from main-program or wifi-occupancy-algorithm).
-    """
     # Configure 'requests' logger
     requests_logger = logging.getLogger("requests")
     requests_logger.setLevel(log_level)

@@ -1,6 +1,7 @@
 import json
 import sys
 import os
+import concurrent.futures
 
 # Dynamically add the modules directory to sys.path
 modules_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "modules")
@@ -26,7 +27,8 @@ import cellular_occupancy_algo as cellularOccupancy
 ################# Execution starts here #################
 # setting up logger
 log_prefix = "main-program"
-loggerSetup = logger.setup_logger(log_prefix)
+log_module = "Main"
+loggerSetup = logger.setup_logger(log_prefix, log_module)
 logger.log_message(loggerSetup, "INFO", "")
 logger.log_message(loggerSetup, "INFO", "###################   Starting the Main Program   ###################")
 
@@ -45,26 +47,30 @@ try:
     else:
         logger.log_message(loggerSetup, "INFO", "All devices are available!")
 
-    # Get the WiFi occupancy list
-    logger.log_message(loggerSetup, "INFO", "Getting the WiFi occupancy list...")
-    wifi_occupancy_list, module_status_code = wifiOccupancy.get_wifi_occupancy_list(logger, wifi_properties, system_properties)
-    if module_status_code != 0:
+    # Run WiFi and Cellular occupancy list retrieval in parallel
+    logger.log_message(loggerSetup, "INFO", "Getting the WiFi and Cellular occupancy lists in parallel...")
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        wifi_future = executor.submit(wifiOccupancy.get_wifi_occupancy_list, logger, wifi_properties, system_properties)
+        cellular_future = executor.submit(cellularOccupancy.get_cellular_occupancy_list, logger, cellular_properties, system_properties)
+
+        # Wait for both tasks to complete
+        wifi_occupancy_list, wifi_status_code = wifi_future.result()
+        cellular_occupancy_list, cellular_status_code = cellular_future.result()
+
+    # Check results of WiFi occupancy list retrieval
+    if wifi_status_code != 0:
         logger.log_message(loggerSetup, "ERROR", "Error occurred while getting the WiFi occupancy list.")
         sys.exit(1)
     else:
         logger.log_message(loggerSetup, "INFO", "WiFi occupancy list obtained successfully!")
 
-
-    # Get the Cellular occupancy list
-    logger.log_message(loggerSetup, "INFO", "Getting the Cellular occupancy list...")
-    cellular_occupancy_list, module_status_code = cellularOccupancy.get_cellular_occupancy_list(logger, cellular_properties, system_properties)
-    if module_status_code != 0:
+    # Check results of Cellular occupancy list retrieval
+    if cellular_status_code != 0:
         logger.log_message(loggerSetup, "ERROR", "Error occurred while getting the Cellular occupancy list.")
         sys.exit(1)
     else:
         logger.log_message(loggerSetup, "INFO", "Cellular occupancy list obtained successfully!")
 
-    
     # Obfuscate the data
     obfuscated_data = obfuscateData.obfuscate_data(system_properties, wifi_occupancy_list, cellular_occupancy_list, logger, loggerSetup)
     

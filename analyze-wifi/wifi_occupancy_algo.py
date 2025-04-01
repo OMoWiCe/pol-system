@@ -9,8 +9,8 @@ import subprocess
 def get_wifi_occupancy_list(logger, properties, system_properties):
     # setting up logger
     log_prefix = "wifi-occupancy-algo"
-    loggerSetup = logger.setup_logger(log_prefix)
-    logger.log_message(loggerSetup, "INFO", "")
+    log_module = "WiFi"
+    loggerSetup = logger.setup_logger(log_prefix, log_module)
     logger.log_message(loggerSetup, "START", "Starting the WiFi Occupancy Algorithm")
     logger.enable_requests_logging(loggerSetup)
 
