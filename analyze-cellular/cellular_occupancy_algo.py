@@ -40,6 +40,7 @@ def write_channel_file(file_path, data, logger, loggerSetup):
 def cell_scan(bands, sample_rate, logger, loggerSetup):
     try:
         logger.log_message(loggerSetup, "INFO", f"Starting Scanning bands: {bands} with sample rate: {sample_rate}")
+        start_time = time.time()
         channels = []
         for band in bands:
             logger.log_message(loggerSetup, "DEBUG", f"Scanning band: {band}")
@@ -65,11 +66,12 @@ def cell_scan(bands, sample_rate, logger, loggerSetup):
                 unique_channels.append(channel["arfcn"])
                 unique_channels_list.append(channel)
         channels = unique_channels_list
-        logger.log_message(loggerSetup, "INFO", f"Found {len(unique_channels)} unique channels")
-        return channels
+        scan_time = time.time() - start_time
+        logger.log_message(loggerSetup, "INFO", f"Found {len(unique_channels)} unique channels in {scan_time:.2f} seconds")
+        return channels, scan_time
     except Exception as e:
         logger.log_message(loggerSetup, "ERROR", f"Error during cell scan: {e}")
-        return []
+        return [], 0
 
 # Function to capture packets using grgsm_livemon_headless
 def channel_capture(frequency, sample_rate, logger, loggerSetup):
@@ -169,20 +171,23 @@ def get_cellular_occupancy_list(logger, cellular_properties, system_properties):
         signal_threshold = cellular_properties["signal_threshold"]
         cell_scan_expire_time = cellular_properties["cell_scan_expire_time"]
         cell_timer = 0
+        scan_time = 0
         mobile_stations = []
 
         # Read the channel data from the file
         channels = read_channel_file(channel_list_file_path, cell_scan_expire_time, logger, loggerSetup)
         # If the file is empty or not found, run the cell_scan function
         if not channels:
-            channels = cell_scan(bands, sample_rate, logger, loggerSetup)
+            channels, scan_time = cell_scan(bands, sample_rate, logger, loggerSetup)
             write_channel_file(channel_list_file_path, channels, logger, loggerSetup)
             logger.log_message(loggerSetup, "INFO", f"Using newly scanned channels.")
             # Read the channel data from the file
             channels = read_channel_file(channel_list_file_path, cell_scan_expire_time, logger, loggerSetup)
 
         # Calculate cell_timer
-        cell_timer = (system_properties["cloud_sync_interval"] / len(channels)) - 1
+        # reduce the cell_timer when performing the cell_scan
+        cell_timer = ((system_properties["cloud_sync_interval"] - scan_time) / len(channels)) - 1
+        if cell_timer < 0: cell_timer = 0
         logger.log_message(loggerSetup, "INFO", f"Calculated cell timer: {cell_timer} seconds")
 
         # Loop through the channels and capture packets

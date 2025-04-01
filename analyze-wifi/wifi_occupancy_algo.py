@@ -18,8 +18,8 @@ def get_wifi_occupancy_list(logger, properties, system_properties):
 
     # Starting Kismet Server usig bash and wait for next cloud sync
     manage_kismet_server("start", logger, loggerSetup)
-    waiting_time = system_properties['cloud_sync_interval'] - 10
-    logger.log_message(loggerSetup, "INFO", f"Waiting for {waiting_time} seconds for next cloud sync...")
+    waiting_time = system_properties['cloud_sync_interval'] - 5
+    logger.log_message(loggerSetup, "INFO", f"Capturing for {waiting_time} seconds till next cloud sync...")
     time.sleep(waiting_time)
 
     # Get device list active in past X seconds from Kismet API

@@ -29,7 +29,6 @@ import cellular_occupancy_algo as cellularOccupancy
 log_prefix = "main-program"
 log_module = "Main"
 loggerSetup = logger.setup_logger(log_prefix, log_module)
-logger.log_message(loggerSetup, "INFO", "")
 logger.log_message(loggerSetup, "INFO", "###################   Starting the Main Program   ###################")
 
 try:
