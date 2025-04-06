@@ -6,15 +6,33 @@
         "band": "GSM900"
     },
     {
+        "arfcn": "4",
+        "frequency": "935.8M",
+        "power": "-54",
+        "band": "GSM900"
+    },
+    {
+        "arfcn": "1023",
+        "frequency": "934.8M",
+        "power": "-53",
+        "band": "GSM900"
+    },
+    {
+        "arfcn": "16",
+        "frequency": "938.2M",
+        "power": "-53",
+        "band": "GSM900"
+    },
+    {
         "arfcn": "22",
         "frequency": "939.4M",
-        "power": "-43",
+        "power": "-41",
         "band": "GSM900"
     },
     {
         "arfcn": "30",
         "frequency": "941.0M",
-        "power": "-42",
+        "power": "-43",
         "band": "GSM900"
     }
 ]

@@ -2,7 +2,7 @@ import hashlib
 from datetime import datetime, timezone
 
 def obfuscate_data(properties, wifi_data_list, cellular_data_list, logger, loggerSetup):
-    logger.log_message(loggerSetup, "START", "Obfuscating the WiFi & Cellular occupancy list")
+    logger.log_message(loggerSetup, "START", "Obfuscating & Sending Occupancy Data to Azure")
 
     # Generate a key using the obfuscate secret
     obfuscate_secret = properties.get("obfuscate_secret", "")
@@ -49,5 +49,4 @@ def obfuscate_data(properties, wifi_data_list, cellular_data_list, logger, logge
         "wifi-occupancy-list": wifi_obfuscated_list,
         "cellular-occupancy-list": cellular_obfuscated_list
     }
-    logger.log_message(loggerSetup, "INFO", "Occupancy data is ready to be sent!")
     return obfuscated_data

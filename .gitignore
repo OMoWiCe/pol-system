@@ -7,11 +7,14 @@ logs/
 # Misc.
 misc/
 .vscode/
+.env
+test-capturing/
 
 # Kismet files
 *.kismet*
 
 # Response files
 obfuscated-data.json
+nearby_channels.json
 debug_ap-filtered-list.json
 recentActive_nearby_list.json

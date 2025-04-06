@@ -1,9 +1,15 @@
 import os
 from configparser import ConfigParser
+from dotenv import load_dotenv
 import _logger as logger
 
 # Default properties file name
 file_name="system.properties"
+
+# Load environment variables from .env file
+dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
+if os.path.exists(dotenv_path):
+    load_dotenv(dotenv_path)
 
 # Function to load properties from a file
 def load_properties(loggerSetup, module:str):
@@ -30,14 +36,16 @@ def system_properties(loggerSetup):
         location_id = properties["location_id"]
         device_id = properties["device_id"]
         cloud_sync_interval = int(properties["cloud_sync_interval"])
-        obfuscate_secret = properties["obfuscate_secret"]
+        obfuscate_secret = os.getenv("OBFUSCATE_SECRET")
+        iot_hub_connection_string = os.getenv("IOT_HUB_CONNECTION_STRING")
     except Exception as e:
         location_id = "default"
         device_id = "default"
         cloud_sync_interval = 300
         obfuscate_secret = "default"
+        iot_hub_connection_string = "default"
     # return properties with key value pairs
-    return {"location_id": location_id, "device_id": device_id, "cloud_sync_interval": cloud_sync_interval, "obfuscate_secret": obfuscate_secret}
+    return {"location_id": location_id, "device_id": device_id, "cloud_sync_interval": cloud_sync_interval, "obfuscate_secret": obfuscate_secret, "iot_hub_connection_string": iot_hub_connection_string}
 
 
 # Function to load WiFi properties
