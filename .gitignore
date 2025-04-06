@@ -8,6 +8,7 @@ logs/
 misc/
 .vscode/
 .env
+venv/
 test-capturing/
 
 # Kismet files

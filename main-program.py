@@ -1,4 +1,4 @@
-#!/root/research-work/venv/bin/python
+#!/root/research-work/pol-system/venv/bin/python
 import json
 import sys
 import os
