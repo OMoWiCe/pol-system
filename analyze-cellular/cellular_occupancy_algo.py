@@ -115,22 +115,18 @@ def filter_packets(output, frequency, logger, loggerSetup):
 
     for line in lines:
         line = line.strip()
-        if "TMSI/P-TMSI:" in line:
-            tmsi = line.split(":")[1].strip()
-            current_station["tmsi"] = tmsi
-        elif "ARFCN:" in line:
+        if "ARFCN:" in line:
             arfcn = line.split(":")[1].split()[0].strip()
             current_station["arfcn"] = arfcn
         elif "Signal Level:" in line:
             signal_level = line.split(":")[1].strip().split()[0]
             current_station["signal_level"] = signal_level
-        elif "Frame" in line and current_station:  # New frame indicates end of current station
-            if "tmsi" in current_station:
-                mobile_stations.append(current_station)
-                current_station = {}
-    # Add the last station if it exists
-    if current_station and "tmsi" in current_station:
-        mobile_stations.append(current_station)
+        elif "TMSI/P-TMSI/M-TMSI/5G-TMSI:" in line:
+            tmsi = line.split(":")[1].strip()
+            current_station["tmsi"] = tmsi
+            mobile_stations.append(current_station)
+        elif "Frame" in line and "on interface lo" in line:  # New frame indicates end of current station
+            current_station = {}
     logger.log_message(loggerSetup, "INFO", f"Filtered {len(mobile_stations)} mobile stations for the {frequency} frequency")
     return mobile_stations
 
@@ -159,14 +155,18 @@ def run_capture_and_decode(frequency, sample_rate, cell_timer, logger, loggerSet
 def get_unique_ms(mobile_stations, signal_threshold, logger, loggerSetup):
     unique_tmsi = []
     unique_ms = []
+    signal_levels = []
     for station in mobile_stations:
         tmsi = station["tmsi"]
         if tmsi not in unique_tmsi:
             unique_tmsi.append(tmsi)
+            # store all the signal levels for debugging
+            signal_levels.append(station["signal_level"])
             # Check if the signal level is above the threshold
             if int(station["signal_level"]) >= signal_threshold:
                 unique_ms.append(station)
     logger.log_message(loggerSetup, "INFO", f"Found {len(unique_tmsi)} unique Mobile Stations")
+    logger.log_message(loggerSetup, "DEBUG", f"Observed signal levels: {signal_levels}")
     logger.log_message(loggerSetup, "INFO", f"Nearest Mobile Stations count: {len(unique_ms)}")
     return unique_ms
 

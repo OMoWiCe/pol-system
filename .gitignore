@@ -1,21 +1,21 @@
 # Cache directories
 __pycache__/
 
-# Logs
+# Directories
 logs/
+test-capturing/
 
 # Misc.
 misc/
 .vscode/
-.env
 venv/
-test-capturing/
+.env
 
 # Kismet files
 *.kismet*
 
 # Response files
-obfuscated-data.json
 nearby_channels.json
+obfuscated-data.json
 debug_ap-filtered-list.json
 recentActive_nearby_list.json

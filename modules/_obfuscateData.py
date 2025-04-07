@@ -42,11 +42,11 @@ def obfuscate_data(properties, wifi_data_list, cellular_data_list, logger, logge
 
     # Create the final JSON object
     obfuscated_data = {
-        "location-id": properties["location_id"],
+        "location_id": properties["location_id"],
         "device_id": f"{properties["device_id"]}-pi-{getserial()}",
         "utc_timestamp": current_utc_time,
         "local_timestamp": current_local_time,
-        "wifi-occupancy-list": wifi_obfuscated_list,
-        "cellular-occupancy-list": cellular_obfuscated_list
+        "wifi_occupancy_list": wifi_obfuscated_list,
+        "cellular_occupancy_list": cellular_obfuscated_list
     }
     return obfuscated_data
