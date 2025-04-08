@@ -1,38 +1,58 @@
 [
     {
+        "arfcn": "3",
+        "frequency": "935.6M",
+        "power": "-49",
+        "band": "GSM900",
+        "mnc": "1"
+    },
+    {
         "arfcn": "5",
         "frequency": "936.0M",
-        "power": "-50",
-        "band": "GSM900"
+        "power": "-40",
+        "band": "GSM900",
+        "mnc": "0"
     },
     {
         "arfcn": "8",
         "frequency": "936.6M",
-        "power": "-49",
-        "band": "GSM900"
+        "power": "-40",
+        "band": "GSM900",
+        "mnc": "2"
     },
     {
         "arfcn": "13",
         "frequency": "937.6M",
-        "power": "-53",
-        "band": "GSM900"
+        "power": "-43",
+        "band": "GSM900",
+        "mnc": "1"
     },
     {
         "arfcn": "16",
         "frequency": "938.2M",
+        "power": "-38",
+        "band": "GSM900",
+        "mnc": "2"
+    },
+    {
+        "arfcn": "22",
+        "frequency": "939.4M",
+        "power": "-48",
+        "band": "GSM900",
+        "mnc": "2"
+    },
+    {
+        "arfcn": "30",
+        "frequency": "941.0M",
+        "power": "-47",
+        "band": "GSM900",
+        "mnc": "2"
+    },
+    {
+        "arfcn": "68",
+        "frequency": "948.6M",
         "power": "-43",
-        "band": "GSM900"
-    },
-    {
-        "arfcn": "19",
-        "frequency": "938.8M",
-        "power": "-36",
-        "band": "GSM900"
-    },
-    {
-        "arfcn": "27",
-        "frequency": "940.4M",
-        "power": "-51",
-        "band": "GSM900"
+        "band": "GSM900",
+        "mnc": "8"
     }
 ]

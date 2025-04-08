@@ -72,8 +72,9 @@ def cell_scan(bands, sample_rate, logger, loggerSetup):
                     arfcn = parts[0].split(":")[1].strip()
                     frequency = parts[1].split(":")[1].strip()
                     power = parts[6].split(":")[1].strip()
-                    channels.append({"arfcn": arfcn, "frequency": frequency, "power": power, "band": band})
-                    logger.log_message(loggerSetup, "DEBUG", f"Found channel: {arfcn}, frequency: {frequency}, power: {power}, band: {band}")
+                    mnc =parts[5].split(":")[1].strip()
+                    channels.append({"arfcn": arfcn, "frequency": frequency, "power": power, "band": band, "mnc": mnc})
+                    logger.log_message(loggerSetup, "DEBUG", f"Found channel: {arfcn}, frequency: {frequency}, power: {power}, band: {band}, mnc: {mnc}")
         logger.log_message(loggerSetup, "DEBUG", f"Found {len(channels)} channels in total")
         # getting the unique channels
         unique_channels = []
