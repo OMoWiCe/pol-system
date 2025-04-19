@@ -35,17 +35,17 @@ loggerSetup = logger.setup_logger(log_prefix, log_module)
 logger.log_message(loggerSetup, "INFO", "###################   Starting the Main Program   ###################")
 
 # toggle looping
-looping = False
+looping = True
 
 try:
     # ####### LOCAL TESTING PURPOSES ONLY - START ######
-    # iteration = 1  # Initialize iteration counter
+    iteration = 1  # Initialize iteration counter
     # test_capturing_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"capturing-{datetime.today().strftime('%Y-%m-%d')}")
     # os.makedirs(test_capturing_folder, exist_ok=True)  # Ensure the folder exists
     # ####### LOCAL TESTING PURPOSES ONLY - END ######
 
     while True:  # Loop until interrupted
-        #logger.log_message(loggerSetup, "INFO", f"Starting iteration {iteration}...")
+        logger.log_message(loggerSetup, "INFO", f"Starting iteration {iteration}...")
 
         ####### reading properties
         logger.log_message(loggerSetup, "INFO", f"Loading properties...")
@@ -90,13 +90,13 @@ try:
         
         # ####### LOCAL TESTING PURPOSES ONLY - START ######
         # ##--- Save the obfuscated data to a file with iteration number
-        # obfuscated_file = os.path.join(test_capturing_folder, f"obfuscated-data-{datetime.today().strftime('%H:%M:%S')}.json")
+        # obfuscated_file = os.path.join(test_capturing_folder, f"obfuscated-data-{datetime.today().strftime('%H-%M-%S')}.json")
         # with open(obfuscated_file, "w") as file:
         #     json.dump(obfuscated_data, file, indent=4)
         # logger.log_message(loggerSetup, "DEBUG", f"Obfuscated data saved to '{obfuscated_file}'.")
-        # logger.log_message(loggerSetup, "INFO", f"Iteration {iteration} completed successfully.")
-        # logger.log_message(loggerSetup, "INFO", "------------------")
-        # iteration += 1  # Increment iteration counter
+        logger.log_message(loggerSetup, "INFO", f"Iteration {iteration} completed successfully.")
+        logger.log_message(loggerSetup, "INFO", "------------------")
+        iteration += 1  # Increment iteration counter
         # ####### LOCAL TESTING PURPOSES ONLY - END ######
 
         ##--- Debug: Save the obfuscated data to a file
